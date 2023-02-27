@@ -671,7 +671,7 @@ class IOCConfiguration(IOCZFS):
     @staticmethod
     def get_version():
         """Sets the iocage configuration version."""
-        version = '27'
+        version = '28'
 
         return version
 
@@ -1108,6 +1108,10 @@ class IOCConfiguration(IOCZFS):
         if not conf.get('min_dyn_devfs_ruleset'):
             conf['min_dyn_devfs_ruleset'] = '1000'
 
+        # Version 28 key
+        if not conf.get('allow_mount_fdescfs'):
+            conf['allow_mount_fdescfs'] = 0
+
         if not default:
             conf.update(jail_conf)
 
@@ -1355,6 +1359,7 @@ class IOCConfiguration(IOCZFS):
             'allow_mlock': 0,
             'allow_mount': 0,
             'allow_mount_devfs': 0,
+            'allow_mount_fdescfs': 0,
             'allow_mount_fusefs': 0,
             'allow_mount_nullfs': 0,
             'allow_mount_procfs': 0,
@@ -1532,6 +1537,7 @@ class IOCJson(IOCConfiguration):
             'allow_mount_procfs',
             'allow_mount_nullfs',
             'allow_mount_fusefs',
+            'allow_mount_fdescfs',
             'allow_mount_devfs',
             'allow_mount',
             'allow_mlock',
@@ -2305,6 +2311,7 @@ class IOCJson(IOCConfiguration):
             "allow_mlock": truth_variations,
             "allow_mount": truth_variations,
             "allow_mount_devfs": truth_variations,
+            "allow_mount_fdescfs": truth_variations,
             "allow_mount_fusefs": truth_variations,
             "allow_mount_nullfs": truth_variations,
             "allow_mount_procfs": truth_variations,

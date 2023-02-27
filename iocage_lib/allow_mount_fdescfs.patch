@@ -1,0 +1,107 @@
+diff --git a/iocage.8 b/iocage.8
+index 9b0935a..f483def 100644
+--- a/iocage.8
++++ b/iocage.8
+@@ -1643,6 +1643,18 @@ Default: 0
+ .Pp
+ Source:
+ .Xr jail 8
++.It Pf allow_mount_fdescfs= Op 1 | 0
++Allow privileged users inside the jail to mount and unmount the fdescfs
++file system.
++This permission is effective only together with allow.mount and if
++enforce_statfs is set to a value lower than 2.
++.Pp
++Note: This is not supported on FreeBSD 9.3.
++.Pp
++Default: 0
++.Pp
++Source:
++.Xr jail 8
+ .It Pf allow_mount_fusefs= Op 1 | 0
+ Allow privileged users inside the jail to mount and unmount fusefs file
+ systems.
+diff --git a/iocage.8.gz b/iocage.8.gz
+index 1861a4d..aeb6b43 100644
+Binary files a/iocage.8.gz and b/iocage.8.gz differ
+diff --git a/iocage_lib/ioc_json.py b/iocage_lib/ioc_json.py
+index c8dde29..2647d05 100644
+--- a/iocage_lib/ioc_json.py
++++ b/iocage_lib/ioc_json.py
+@@ -671,7 +671,7 @@ class IOCConfiguration(IOCZFS):
+     @staticmethod
+     def get_version():
+         """Sets the iocage configuration version."""
+-        version = '27'
++        version = '28'
+ 
+         return version
+ 
+@@ -1108,6 +1108,10 @@ class IOCConfiguration(IOCZFS):
+         if not conf.get('min_dyn_devfs_ruleset'):
+             conf['min_dyn_devfs_ruleset'] = '1000'
+ 
++        # Version 28 key
++        if not conf.get('allow_mount_fdescfs'):
++            conf['allow_mount_fdescfs'] = 0
++
+         if not default:
+             conf.update(jail_conf)
+ 
+@@ -1355,6 +1359,7 @@ class IOCConfiguration(IOCZFS):
+             'allow_mlock': 0,
+             'allow_mount': 0,
+             'allow_mount_devfs': 0,
++            'allow_mount_fdescfs': 0,
+             'allow_mount_fusefs': 0,
+             'allow_mount_nullfs': 0,
+             'allow_mount_procfs': 0,
+@@ -1532,6 +1537,7 @@ class IOCJson(IOCConfiguration):
+             'allow_mount_procfs',
+             'allow_mount_nullfs',
+             'allow_mount_fusefs',
++            'allow_mount_fdescfs',
+             'allow_mount_devfs',
+             'allow_mount',
+             'allow_mlock',
+@@ -2305,6 +2311,7 @@ class IOCJson(IOCConfiguration):
+             "allow_mlock": truth_variations,
+             "allow_mount": truth_variations,
+             "allow_mount_devfs": truth_variations,
++            "allow_mount_fdescfs": truth_variations,
+             "allow_mount_fusefs": truth_variations,
+             "allow_mount_nullfs": truth_variations,
+             "allow_mount_procfs": truth_variations,
+diff --git a/iocage_lib/ioc_start.py b/iocage_lib/ioc_start.py
+index c945203..d913f61 100644
+--- a/iocage_lib/ioc_start.py
++++ b/iocage_lib/ioc_start.py
+@@ -137,6 +137,7 @@ class IOCStart(object):
+         allow_mlock = self.conf["allow_mlock"]
+         allow_mount = self.conf["allow_mount"]
+         allow_mount_devfs = self.conf["allow_mount_devfs"]
++        allow_mount_fdescfs = self.conf["allow_mount_fdescfs"]
+         allow_mount_fusefs = self.conf["allow_mount_fusefs"]
+         allow_mount_nullfs = self.conf["allow_mount_nullfs"]
+         allow_mount_procfs = self.conf["allow_mount_procfs"]
+@@ -334,9 +335,11 @@ class IOCStart(object):
+         if userland_version <= 9.3:
+             tmpfs = ""
+             fdescfs = ""
++            _allow_mount_fdescfs = ""
+         else:
+             tmpfs = f"allow.mount.tmpfs={allow_mount_tmpfs}"
+             fdescfs = f"mount.fdescfs={mount_fdescfs}"
++            _allow_mount_fdescfs = f"allow.mount.fdescfs={allow_mount_fdescfs}"
+ 
+         # FreeBSD 10.3 and under do not support this.
+ 
+@@ -548,7 +551,7 @@ class IOCStart(object):
+ 
+         parameters = [
+             fdescfs, _allow_mlock, tmpfs,
+-            _allow_mount_fusefs, _allow_vmm,
++            _allow_mount_fdescfs, _allow_mount_fusefs, _allow_vmm,
+             f"allow.set_hostname={allow_set_hostname}",
+             f"mount.devfs={mount_devfs}",
+             f"allow.raw_sockets={allow_raw_sockets}",
