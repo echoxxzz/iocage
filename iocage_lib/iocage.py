@@ -571,7 +571,7 @@ class IOCage(ioc_json.IOCZFS):
 
             arch = os.uname()[4]
 
-            if arch == 'arm64':
+            if arch in {'i386', 'arm64'}:
                 files = ['MANIFEST', 'base.txz', 'src.txz']
             else:
                 files = ['MANIFEST', 'base.txz', 'lib32.txz', 'src.txz']
@@ -1033,7 +1033,7 @@ class IOCage(ioc_json.IOCZFS):
 
         if not _list:
             if not kwargs.get('files', None):
-                if arch == 'arm64':
+                if arch in {'i386', 'arm64'}:
                     kwargs['files'] = ['MANIFEST', 'base.txz', 'src.txz']
                 else:
                     kwargs['files'] = ['MANIFEST', 'base.txz', 'lib32.txz',
